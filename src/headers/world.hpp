@@ -1,3 +1,6 @@
+#ifndef WORLD_H
+#define WORLD_H
+
 #include "chunk_coord.hpp"
 
 #include <typeinfo>
@@ -45,7 +48,7 @@ public:
         
 
         // Generate the chunks
-        GenerateChunks();
+        //GenerateChunks();
     }
 
     void GenerateChunks() {
@@ -168,3 +171,5 @@ private:
     // Temporary chunks
     vector<Chunk> tempChunks;
 };
+
+#endif

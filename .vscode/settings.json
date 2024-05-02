@@ -67,5 +67,6 @@
         "ratio": "cpp",
         "stop_token": "cpp",
         "thread": "cpp"
-    }
+    },
+    "cmake.sourceDirectory": "C:/Users/misle/Documents/GitHub/minecraft/include/glm"
 }
