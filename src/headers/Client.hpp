@@ -7,37 +7,29 @@
  *  HANDLES MAIN WINDOW LOOP
  */
 
-#define GLM_ENABLE_EXPERIMENTAL
-#include <glm/glm.hpp>
-#include <glm/gtx/transform.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
-
-#include "World.hpp"
-#include "shader.hpp"
 #include "controls.hpp"
+#include "GLMinclude.hpp"
+#include "shader.hpp"
+#include "World.hpp"
 
-const bool DEBUG = true;
-
-extern GLuint programID;
+extern GLuint* programID;
 
 using namespace std;
 using namespace glm;
 
-class Player {
+class Client {
 private:
     GLFWwindow* window;
-    GLuint programID;
 
     World* world;
     vec3 position;
     int renderDistance;
 
 public:
-    Player(World* world);
-    Player(World* world, vec3 pos);
-    Player(World* world, vec3 pos, int rendist);
-    ~Player();
+    Client(World* world);
+    Client(World* world, vec3 pos);
+    Client(World* world, vec3 pos, int rendist);
+    ~Client();
 
     bool Init();
     int setupWindow(bool vsync, bool fullscreen);
@@ -45,27 +37,27 @@ public:
     void renderWorld();
 };
 
-Player::~Player() {
+Client::~Client() {
 
 };
 
-Player::Player(World* w) {
-    Player(w, { 0, 4, 0 });
+Client::Client(World* w) {
+    Client(w, { 0, 4, 0 });
 }
 
-Player::Player(World* w, vec3 pos) {
-    Player(w, pos, 32);
+Client::Client(World* w, vec3 pos) {
+    Client(w, pos, 32);
 }
 
-Player::Player(World* w, vec3 pos, int rendist) : world(w), position(pos), renderDistance(rendist) {}
+Client::Client(World* w, vec3 pos, int rendist) : world(w), position(pos), renderDistance(rendist) {}
 
-bool Player::Init() {
+bool Client::Init() {
 
     this->setupWindow(true, false);
 
     // Create & Load the shader
-    programID = LoadShaders( "src/shaders/shader.vert", "src/shaders/shader.frag" );
-    GLuint MatrixID = glGetUniformLocation(programID, "MVP");
+    *programID = LoadShaders( "src/shaders/shader.vert", "src/shaders/shader.frag" );
+    GLuint MatrixID = glGetUniformLocation(*programID, "MVP");
 
     // Setup the input modes
 	//glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
@@ -77,23 +69,25 @@ bool Player::Init() {
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
     glFrontFace(GL_CW);
-    if(DEBUG) glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+    #ifdef MCDEBUG
+        glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+    #endif
 
     // Set light data
     vec3 lightDirection = vec3(0.f, 0.f, 1.f);
 
     // Get the uniform locations
-    GLint lightDirUniformLocation = glGetUniformLocation(programID, "lightDirection");
+    GLint lightDirUniformLocation = glGetUniformLocation(*programID, "lightDirection");
 
     // Main Program loop
     while (!glfwWindowShouldClose(window)) {
 
         // Update the world
-        this->world->UpdateChunks(position);
+        //this->world->UpdateChunks(position);
 
         // Clears Buffer
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glUseProgram(programID);
+        glUseProgram(*programID);
 
         // Update Camera
 		computeMatricesFromInputs();
@@ -104,32 +98,20 @@ bool Player::Init() {
         glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &MVP[0][0]);
         glUniform3fv(lightDirUniformLocation, 1, value_ptr(lightDirection));
 
-        // Render the world
-        unique_lock<mutex> lock(chunkMutex);
-        chunkCondition.wait(lock, [] { return !chunks.empty(); });
-        for (auto& chunk : chunks) {
-            chunk.second.Draw();
-        }
-        lock.unlock();
-
-		if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
-			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-		}
-
         // Update the window
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
 
     // Close the program
-    glDeleteProgram(programID);
+    glDeleteProgram(*programID);
     glfwDestroyWindow(window);
     glfwTerminate();
     return 0;
 }
 
 
-int Player::setupWindow(bool vsync, bool fullscreen) {
+int Client::setupWindow(bool vsync, bool fullscreen) {
     glfwInit();
     glfwWindowHint(GLFW_SAMPLES, 0);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -164,11 +146,8 @@ int Player::setupWindow(bool vsync, bool fullscreen) {
     return 1;
 }
 
-void Player::renderWorld() {
+void Client::renderWorld() {
     //TODO: Make chunks only check to render chunk sides if there is one next to it, else dont. FOR THE WORLD NOT PLAYER OR CHUNK
     //vector<Chunk*> chunks = this->world->GetChunks(this->position, this->renderDistance);
 
-    for(int i = 0; i < chunks.size(); i++) {
-        
-    }
 }

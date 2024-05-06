@@ -1,7 +1,7 @@
 #ifndef WORLD_H
 #define WORLD_H
 
-#include "chunk_coord.hpp"
+//#include "chunk_coord.hpp"
 
 #include <typeinfo>
 #include <iostream>
@@ -10,6 +10,51 @@
 #include <set>
 
 using namespace std;
+
+vector<GLfloat> vertices = {
+    0.0f, 0.0f, 1.0f, // Bottom-left
+    1.0f, 0.0f, 1.0f, // Bottom-right
+    1.0f, 1.0f, 1.0f, // Top-right
+    1.0f, 1.0f, 1.0f, // Top-right
+    0.0f, 1.0f, 1.0f, // Top-left
+    0.0f, 0.0f, 1.0f, // Bottom-left
+
+    
+    0.0f, 0.0f, 0.0f, // Bottom-right
+    1.0f, 0.0f, 0.0f, // Bottom-left
+    1.0f, 1.0f, 0.0f, // Top-left
+    1.0f, 1.0f, 0.0f, // Top-left
+    0.0f, 1.0f, 0.0f, // Top-right
+    0.0f, 0.0f, 0.0f, // Bottom-right
+
+    0.0f, 1.0f, 0.0f, // Top-left
+    0.0f, 1.0f, 1.0f, // Bottom-left
+    1.0f, 1.0f, 1.0f, // Bottom-right
+    1.0f, 1.0f, 1.0f, // Bottom-right
+    1.0f, 1.0f, 0.0f, // Top-right
+    0.0f, 1.0f, 0.0f, // Top-left
+
+    0.0f, 0.0f, 0.0f, // Top-right
+    1.0f, 0.0f, 0.0f, // Top-left
+    1.0f, 0.0f, 1.0f, // Bottom-left
+    1.0f, 0.0f, 1.0f, // Bottom-left
+    0.0f, 0.0f, 1.0f, // Bottom-right
+    0.0f, 0.0f, 0.0f, // Top-right
+
+    1.0f, 0.0f, 0.0f, // Bottom-left
+    1.0f, 1.0f, 0.0f, // Top-left
+    1.0f, 1.0f, 1.0f, // Top-right
+    1.0f, 1.0f, 1.0f, // Top-right
+    1.0f, 0.0f, 1.0f, // Bottom-right
+    1.0f, 0.0f, 0.0f, // Bottom-left
+
+    0.0f, 0.0f, 0.0f, // Bottom-right
+    0.0f, 1.0f, 0.0f, // Top-right
+    0.0f, 1.0f, 1.0f, // Top-left
+    0.0f, 1.0f, 1.0f, // Top-left
+    0.0f, 0.0f, 1.0f, // Bottom-left
+    0.0f, 0.0f, 0.0f, // Bottom-right
+};
 
 mutex chunkMutex;
 condition_variable chunkCondition;

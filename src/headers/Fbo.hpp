@@ -1,4 +1,6 @@
 #pragma once
+#ifndef FBO_H
+#define FBO_H
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -179,3 +181,5 @@ void Fbo::createDepthBufferAttachment()
 
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthBuffer);
 }
+
+#endif

@@ -1,15 +1,8 @@
-#include <iostream>
-#include <string>
-#include <cstdlib>
-#include <vector>
-#include <cstdlib>
+#pragma once
+#ifndef CHUNK_H
+#define CHUNK_H
 
-#include "object.hpp"
-#include "block_data.hpp"
-#include "fast_noise.hpp"
-#include "chunk_helper.hpp"
-
-extern GLuint programID;
+#include "GLMinclude.hpp"
 
 using namespace std;
 using namespace glm;
@@ -17,9 +10,14 @@ using namespace glm;
 class Chunk {
 private:
     vec2 position;
-
+    bool generated;
+    
 public:
     Chunk(vec2 pos);
 
+    void Draw();
 
+    bool IsGenerated();
 };
+
+#endif

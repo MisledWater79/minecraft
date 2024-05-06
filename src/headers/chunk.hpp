@@ -7,7 +7,6 @@
 #include "object.hpp"
 #include "block_data.hpp"
 #include "fast_noise.hpp"
-#include "chunk_helper.hpp"
 
 extern GLuint programID;
 
