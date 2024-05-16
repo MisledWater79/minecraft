@@ -10,17 +10,15 @@
 using namespace std;
 
 mutex chunkMutex;
-condition_variable chunkCondition;
 
 Chunk blankChunk;
-
-int totalDeleted = 0;
 
 class World {
 public:
     World(unsigned long seed, unsigned short renderDistance) {
         this->seed = seed;
         this->renderDistance = renderDistance;
+        this->genChunks = false;
 
         // Set the noise settings
         heightMap.SetSeed(seed);
@@ -46,55 +44,27 @@ public:
         
 
         // Generate the chunks
-        GenerateChunks();
+        //GenerateChunks();
     }
 
     void GenerateChunks() {
         unique_lock<mutex> lock(chunkMutex);
         int halfRenderDistance = renderDistance / 2;
-        int rendistsquare = renderDistance * renderDistance;
 
-        vector<thread> threads(rendistsquare);
-
-        // First pass: Generate chunk data
+        // Add to generation vector
         for (int i = 0, k = 0; i < renderDistance; i++) {
             for (int j = 0; j < renderDistance; j++) {
                 ChunkCoord chunkPos = {i - halfRenderDistance, j - halfRenderDistance};
                 Chunk& newChunk = chunks[chunkPos];
+                if(newChunk.generated) continue;
                 newChunk.chunkPos = {i - halfRenderDistance, j - halfRenderDistance};
-                //newChunk.Generate(heightMap, gravel, dirt);
-                threads[k] = thread([&]{newChunk.Generate(heightMap, gravel, dirt);});
+                printf("Add Chunk To Gen: %d, %d\n", chunkPos.x, chunkPos.z);
                 chunks[chunkPos] = std::move(newChunk);
-                k++;
+                chunksToCreate.push_back(chunkPos);
             }
         }
 
-        for(int i = 0; i < threads.size(); i++) {
-            threads[i].join();
-            cout << "Chunk done\n";
-        }
-        
-        cout << "Finished Generating Terrain" << endl;
-
-        // Second pass: Generate VBOs
-        for (int i = 0; i < renderDistance; i++) {
-            for (int j = 0; j < renderDistance; j++) {
-                ChunkCoord chunkPos = {i - halfRenderDistance, j - halfRenderDistance};
-                // Correct the neighbor references by correctly adjusting indices
-                chunks[chunkPos].MakeVertexObject(
-                    (i == 0) ? blankChunk : chunks[{chunkPos.x - 1, chunkPos.z}],
-                    (i == renderDistance - 1) ? blankChunk : chunks[{chunkPos.x + 1, chunkPos.z}],
-                    (j == 0) ? blankChunk : chunks[{chunkPos.x, chunkPos.z - 1}],
-                    (j == renderDistance - 1) ? blankChunk : chunks[{chunkPos.x, chunkPos.z + 1}]
-                );
-                chunks[chunkPos].CreateObject();
-                chunks[chunkPos].Cleanup();
-            }
-        }
-
-        cout << "Finished Meshing Terrain" << endl;
         lock.unlock();
-        chunkCondition.notify_one();
     }
 
     void UpdateChunks(vec3 playerPos) {
@@ -111,7 +81,6 @@ public:
         }
 
         std::vector<ChunkCoord> chunksToRemove;
-        std::vector<ChunkCoord> chunksToCreate;
 
         // Determine new chunks and chunks to remove
         for (int i = -halfRenderDistance; i <= halfRenderDistance; i++) {
@@ -134,42 +103,62 @@ public:
             chunks.erase(coord);
         }
 
-        vector<thread> threads(chunksToCreate.size());
-
-        // Create new chunks
-        int i = 0;
-        for (auto& coord : chunksToCreate) {
-            Chunk& newChunk = chunks[coord];
-            newChunk.chunkPos = {coord.x, coord.z};
-            //newChunk.Generate(heightMap, gravel, dirt);
-            threads[i] = thread([&]{newChunk.Generate(heightMap, gravel, dirt);});
-            printf("Creating chunk at %d, %d\n", coord.x, coord.z);
-            chunks[coord] = std::move(newChunk);
-            i++;
-        }
-
-        for(int i = 0; i < threads.size(); i++) {
-            threads[i].join();
-            cout << "Chunk done\n";
-        }
-
-        // Update the VBOs
-        for (auto& coord : chunksToCreate) {
-            // Ensure neighbors exist before this call or handle cases where they don't
-            chunks[coord].MakeVertexObject(
-                blankChunk,
-                blankChunk,
-                blankChunk,
-                blankChunk
-            );
-            chunks[coord].CreateObject();
-            chunks[coord].Cleanup();
-        }
-
         lock.unlock();
-        //chunkCondition.notify_one();
     }
     
+    void startGenThread() {
+        genChunks = true;
+        chunkGen = thread([this]{Generate();});
+    }
+
+    void stopGenThread() {
+        genChunks = false;
+        chunkGen.join();
+    }
+
+    void Generate() {
+        while(this->genChunks) {
+            if(chunksToCreate.size() <= 0) continue;
+            printf("Gen Count: %d\n", chunksToCreate.size());
+            
+            unique_lock<mutex> lock(chunkMutex);
+
+            vector<thread> threads(chunksToCreate.size());
+
+            // Create new chunks
+            int i = 0;
+            for (auto& coord : chunksToCreate) {
+                if(chunks[coord].generated) continue;
+                threads[i] = thread([&]{ chunks[coord].Generate(heightMap, gravel, dirt); });
+                printf("Generating: %d, %d\n", coord.x, coord.z);
+                i++;
+            }
+
+            for (int i = 0; i < threads.size(); i++) {
+                threads[i].join();
+                cout << "Chunk done " << (int) i << "\n";
+            }
+
+            for (auto& chunkPos : chunksToCreate) {
+                if(!chunks[chunkPos].generated) continue;
+                printf("VBO: %d, %d\n", chunkPos.x, chunkPos.z);
+
+                chunks[chunkPos].MakeVertexObject(
+                    (chunks.count({chunkPos.x-1, chunkPos.z})) ? blankChunk : chunks[{chunkPos.x - 1, chunkPos.z}],
+                    (chunks.count({chunkPos.x+1, chunkPos.z})) ? blankChunk : chunks[{chunkPos.x + 1, chunkPos.z}],
+                    (chunks.count({chunkPos.x, chunkPos.z-1})) ? blankChunk : chunks[{chunkPos.x, chunkPos.z - 1}],
+                    (chunks.count({chunkPos.x, chunkPos.z+1})) ? blankChunk : chunks[{chunkPos.x, chunkPos.z + 1}]
+                );
+                chunks[chunkPos].CreateObject();
+                //chunks[chunkPos].Cleanup();
+            }
+
+            cout << "Finished Meshing Terrain" << endl;
+
+            chunksToCreate.clear();
+            lock.unlock();
+        }
+    }
 
     void changeRenderDistance(unsigned short newRenderDistance) {
         renderDistance = newRenderDistance;
@@ -182,12 +171,14 @@ private:
 
     // User Settings
     unsigned short renderDistance;
+    std::vector<ChunkCoord> chunksToCreate;
 
     // Noise
     FastNoise heightMap;
     FastNoise gravel;
     FastNoise dirt;
 
-    // Temporary chunks
-    vector<Chunk> tempChunks;
+    // MultiThreading
+    thread chunkGen;
+    bool genChunks;
 };

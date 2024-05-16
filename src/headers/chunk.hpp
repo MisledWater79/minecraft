@@ -45,8 +45,8 @@ public:
 
     // The block data of the chunk
     unsigned short blockMap[16][255][16] = { AIR };
+    bool generated;
 
-private:
 
     // The object that gets rendered
     Object chunk;
@@ -59,6 +59,7 @@ private:
 // Constructor for the chunk
 Chunk::Chunk(int start_x, int start_y) {
     chunkPos = { start_x, start_y };
+    generated = false;
 }
 
 // Generate the chunk
@@ -132,6 +133,8 @@ void Chunk::Generate(FastNoise &heightGen, FastNoise &gravel, FastNoise &dirt) {
             }
         }
     }
+    
+    generated = true;
 }
 
 // Creates the object for the chunk
@@ -237,7 +240,7 @@ void Chunk::MakeVertexObject(Chunk &negativeX, Chunk &positiveX, Chunk &negative
                     // Get the vertices and UV coords of the block
                     vector<vec3> tempVertices = getSideVertex(blockPos.x + chunkPos.x, blockPos.y, blockPos.z + chunkPos.y, (SIDE)i);
                     vector<vec2> tempUV = getTextureCoords((BLOCK)blockID, (SIDE)i);
-
+                    
                     if (vertices.size() == 0) {
                         vertices = tempVertices;
                     }

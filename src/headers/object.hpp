@@ -1,3 +1,7 @@
+#pragma once
+#ifndef OBJECT_H
+#define OBJECT_H
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <vector>
@@ -142,3 +146,5 @@ GLuint loadPNG(const char *imagepath, bool useAlphaChannel) {
 
     return textureID;
 }
+
+#endif
