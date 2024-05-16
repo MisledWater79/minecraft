@@ -16,11 +16,11 @@
 #include "headers/controls.hpp"
 #include "headers/object.hpp"
 
-// extern "C"
-// {
-//    __declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;
-//    __declspec(dllexport) DWORD NvOptimusEnablement = 0x00000001;
-// }
+extern "C"
+{
+   __declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;
+   __declspec(dllexport) DWORD NvOptimusEnablement = 0x00000001;
+}
 
 GLFWwindow* window;
 GLuint programID;
@@ -30,14 +30,53 @@ using namespace std;
 using namespace glm;
 
 vector<vec3> vertices = {
-	{-0.5f, -0.5f,  0.5f}, 
-     {0.5f, -0.5f,  0.5f},
-     {0.5f,  0.5f,  0.5},
-    {-0.5f,  0.5f,  0.5f},
-    {-0.5f, -0.5f,  -0.5f},
-     {0.5f, -0.5f,  -0.5f},
-    { 0.5f,  0.5f,  -0.5f},
-    {-0.5f,  0.5f,  -0.5f},
+    //back
+	{0, 0, 0},
+    {1, 0, 0},
+    {0, 1, 0},
+    {0, 1, 0},
+    {1, 1, 0},
+    {1, 0, 0},
+
+    //left
+    {0, 0, 1},
+    {0, 0, 0},
+    {0, 1, 1},
+    {0, 1, 1},
+    {0, 0, 0},
+    {0, 1, 0},
+
+    //front
+    {1, 0, 1},
+    {0, 0, 1},
+    {1, 1, 1},
+    {1, 1, 1},
+    {0, 0, 1},
+    {0, 1, 1},
+    
+    //right
+    {1, 0, 0},
+    {1, 0, 1},
+    {1, 1, 0},
+    {1, 1, 0},
+    {1, 0, 1},
+    {1, 1, 1},
+
+    //top
+    {0, 1, 0},
+    {1, 1, 0},
+    {0, 1, 1},
+    {0, 1, 1},
+    {1, 1, 0},
+    {1, 1, 1},
+
+    //bottom
+    {0, 1, 0},
+    {1, 1, 0},
+    {0, 1, 1},
+    {0, 1, 1},
+    {1, 1, 0},
+    {1, 1, 1},
 };
 
 vector<vec2> uvs = {
@@ -99,7 +138,8 @@ int main() {
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
     glFrontFace(GL_CW);
-    glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+    glPolygonMode(GL_CCW, GL_CLEAR);
+    //glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
 
     // Set light data
     vec3 lightDirection = vec3(0.f, 0.f, 1.f);
@@ -116,7 +156,7 @@ int main() {
     World world(seed, 1);
     world.startGenThread();
 
-    //Object block(vertices, uvs);
+    Object block(vertices, uvs);
 
     int i = 0;
     // Run the program
@@ -137,20 +177,20 @@ int main() {
         glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &MVP[0][0]);
         glUniform3fv(lightDirUniformLocation, 1, value_ptr(lightDirection));
 
-        //block.Draw();
+        block.Draw();
 
         // Update the world
-        world.GenerateChunks();
-        world.UpdateChunks(position);
+        //world.GenerateChunks();
+        //world.UpdateChunks(position);
 
         // Render the world
         unique_lock<mutex> lock(chunkMutex);
         // Copy the chunks
         for (auto& chunk : chunks) {
             if(chunk.second.generated) {
-                chunk.second.Draw();
-                printf("Rendering: %d, %d : %d\n", chunk.first.x, chunk.first.z, chunk.second.generated);
-                printf("Verts: %d\n", chunk.second.vertices.size());
+                //chunk.second.Draw();
+                //printf("Rendering: %d, %d : %d\n", chunk.first.x, chunk.first.z, chunk.second.generated);
+                //printf("Verts: %d\n", chunk.second.vertices.size());
             }
         }
         //printf("Rendered Chunks\n");
