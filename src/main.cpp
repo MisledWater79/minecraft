@@ -43,16 +43,16 @@ vector<vec3> vertices = {
     {0, 0, 0},
     {0, 1, 1},
     {0, 1, 1},
-    {0, 0, 0},
     {0, 1, 0},
+    {0, 0, 0},
 
     //front
     {1, 0, 1},
     {0, 0, 1},
     {1, 1, 1},
     {1, 1, 1},
-    {0, 0, 1},
     {0, 1, 1},
+    {0, 0, 1},
     
     //right
     {1, 0, 0},
@@ -67,53 +67,66 @@ vector<vec3> vertices = {
     {1, 1, 0},
     {0, 1, 1},
     {0, 1, 1},
-    {1, 1, 0},
     {1, 1, 1},
+    {1, 1, 0},
 
     //bottom
-    {0, 1, 0},
-    {1, 1, 0},
-    {0, 1, 1},
-    {0, 1, 1},
-    {1, 1, 0},
-    {1, 1, 1},
+    {0, 0, 1},
+    {1, 0, 1},
+    {0, 0, 0},
+    {0, 0, 0},
+    {1, 0, 0},
+    {1, 0, 1},
 };
 
 vector<vec2> uvs = {
-    // Front face
-    {0.125f, 0.0f},
-    {0.1875f, 0.0f},
-    {0.1875f, 0.0625f},
-    {0.125f, 0.0625f},
 
     // Back face
-    {0.125f, 0.0f},
-    {0.1875f, 0.0f},
     {0.1875f, 0.0625f},
     {0.125f, 0.0625f},
-
-    // Top face
-    {0.125f, 0.0f},
     {0.1875f, 0.0f},
-    {0.1875f, 0.0625f},
-    {0.125f, 0.0625f},
-
-    // Bottom face
-    {0.125f, 0.0f},
     {0.1875f, 0.0f},
-    {0.1875f, 0.0625f},
+    {0.125f, 0.0f},
     {0.125f, 0.0625f},
 
     // Left face
-    {0.125f, 0.0f},
-    {0.1875f, 0.0f},
     {0.1875f, 0.0625f},
+    {0.125f, 0.0625f},
+    {0.1875f, 0.0f},
+    {0.1875f, 0.0f},
+    {0.125f, 0.0f},
+    {0.125f, 0.0625f},
+
+    // Front face
+    {0.1875f, 0.0625f},
+    {0.125f, 0.0625f},
+    {0.1875f, 0.0f},
+    {0.1875f, 0.0f},
+    {0.125f, 0.0f},
     {0.125f, 0.0625f},
 
     // Right face
-    {0.125f, 0.0f},
-    {0.1875f, 0.0f},
     {0.1875f, 0.0625f},
+    {0.125f, 0.0625f},
+    {0.1875f, 0.0f},
+    {0.1875f, 0.0f},
+    {0.125f, 0.0625f},
+    {0.125f, 0.0f},
+
+    // Top face
+    {0.1875f, 0.0625f},
+    {0.125f, 0.0625f},
+    {0.1875f, 0.0f},
+    {0.1875f, 0.0f},
+    {0.125f, 0.0f},
+    {0.125f, 0.0625f},
+
+    // Bottom face
+    {0.1875f, 0.0625f},
+    {0.125f, 0.0625f},
+    {0.1875f, 0.0f},
+    {0.1875f, 0.0f},
+    {0.125f, 0.0f},
     {0.125f, 0.0625f},
 };
 
@@ -156,7 +169,7 @@ int main() {
     World world(seed, 1);
     world.startGenThread();
 
-    Object block(vertices, uvs);
+    //Object block(vertices, uvs);
 
     int i = 0;
     // Run the program
@@ -172,23 +185,23 @@ int main() {
 		glm::mat4 MVP = ProjectionMatrix * ViewMatrix * ModelMatrix;
 
         // print out the directions
-        // printPositions("clear");
+        printPositions();
 
         glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &MVP[0][0]);
         glUniform3fv(lightDirUniformLocation, 1, value_ptr(lightDirection));
 
-        block.Draw();
+        //block.Draw();
 
         // Update the world
-        //world.GenerateChunks();
-        //world.UpdateChunks(position);
+        world.GenerateChunks();
+        world.UpdateChunks(position);
 
         // Render the world
         unique_lock<mutex> lock(chunkMutex);
         // Copy the chunks
         for (auto& chunk : chunks) {
             if(chunk.second.generated) {
-                //chunk.second.Draw();
+                chunk.second.Draw();
                 //printf("Rendering: %d, %d : %d\n", chunk.first.x, chunk.first.z, chunk.second.generated);
                 //printf("Verts: %d\n", chunk.second.vertices.size());
             }
